@@ -1,13 +1,38 @@
 <?php
 require_once '../includes/auth.php';
-requireLogin();
 require_once '../includes/db.php';
+requireLogin();
 
 $user_id = $_SESSION['user_id'];
+$error = '';
 
-$stmt = $pdo->prepare("SELECT * FROM items WHERE user_id = ? ORDER BY date_reported DESC");
-$stmt->execute([$user_id]);
-$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    // Get all items with their claim status and claimant info
+    $stmt = $pdo->query("
+        SELECT 
+            i.item_id,
+            i.title,
+            i.description,
+            i.location,
+            i.type,
+            i.date_reported,
+            i.status,
+            u.name as reporter_name,
+            c.claim_id,
+            c.status as claim_status,
+            c.date_claimed,
+            u2.name as claimant_name
+        FROM items i
+        JOIN users u ON i.user_id = u.user_id
+        LEFT JOIN claims c ON i.item_id = c.item_id
+        LEFT JOIN users u2 ON c.claimant_id = u2.user_id
+        ORDER BY i.date_reported DESC
+    ");
+    $items = $stmt->fetchAll();
+} catch (Exception $e) {
+    $error = "Gagal memuat data laporan.";
+    $items = [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -21,7 +46,13 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md">
         <h2 class="text-3xl font-bold text-center text-pink-600 mb-6">Laporan Saya</h2>
 
-        <?php if (count($items) === 0): ?>
+        <?php if ($error): ?>
+            <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
+                <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (empty($items)): ?>
             <p class="text-center text-gray-500">Belum ada laporan yang kamu buat.</p>
         <?php else: ?>
             <div class="space-y-4">
@@ -31,11 +62,20 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <p class="text-gray-700 mb-1"><strong>Jenis:</strong> <?= ucfirst($item['type']) ?></p>
                         <p class="text-gray-700 mb-1"><strong>Lokasi:</strong> <?= htmlspecialchars($item['location']) ?></p>
                         <p class="text-gray-700 mb-1"><strong>Deskripsi:</strong> <?= nl2br(htmlspecialchars($item['description'])) ?></p>
-                        <p class="text-gray-700"><strong>Status:</strong> 
-                            <span class="px-2 py-1 rounded <?= $item['status'] === 'claimed' ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800' ?>">
-                                <?= $item['status'] ?>
+                        <p class="text-gray-700 mb-1"><strong>Status:</strong> 
+                            <span class="px-2 py-1 rounded <?= $item['status'] === 'available' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
+                                <?= $item['status'] === 'available' ? 'Tersedia' : 'Sudah Diklaim' ?>
                             </span>
                         </p>
+
+                        <?php if ($item['claim_id']): ?>
+                            <p class="text-gray-700 mb-1">
+                                <strong>Diklaim oleh:</strong> <?= htmlspecialchars($item['claimant_name']) ?>
+                            </p>
+                            <p class="text-gray-700">
+                                <strong>Tanggal Klaim:</strong> <?= date('d/m/Y H:i', strtotime($item['date_claimed'])) ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>

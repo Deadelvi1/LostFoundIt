@@ -29,17 +29,27 @@ function register($name, $email, $password) {
     return $stmt->execute([$name, $email, $password_hash]);
 }
 
+function requireLogin() {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: /public/login.php');
+        exit;
+    }
+}
+
 function isLoggedIn() {
     return isset($_SESSION['user_id']);
 }
 
-function requireLogin() {
-    if (!isLoggedIn()) {
-        header("Location: login.php");
-        exit();
-    }
+function getCurrentUserId() {
+    return $_SESSION['user_id'] ?? null;
+}
+
+function getCurrentUserName() {
+    return $_SESSION['name'] ?? null;
 }
 
 function logout() {
     session_destroy();
+    header('Location: /public/login.php');
+    exit;
 }

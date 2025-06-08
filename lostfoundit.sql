@@ -25,32 +25,55 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_claimItem` (IN `p_user_id` INT, IN `p_item_id` INT)   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_claimItem` (IN `p_user_id` INT, IN `p_item_id` INT)  
+BEGIN
     DECLARE item_status VARCHAR(20);
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Terjadi kesalahan saat mengklaim barang.';
+    END;
 
+    START TRANSACTION;
+
+    -- Check if item exists and is available
     SELECT status INTO item_status FROM items WHERE item_id = p_item_id;
 
-    IF item_status = 'available' THEN
-        INSERT INTO claims (item_id, claimant_id, status)
-        VALUES (p_item_id, p_user_id, 'approved');
-
-        UPDATE items SET status = 'claimed' WHERE item_id = p_item_id;
-    ELSE
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item not available for claim.';
+    IF item_status IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Barang tidak ditemukan.';
     END IF;
+
+    IF item_status != 'available' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Barang tidak tersedia untuk diklaim.';
+    END IF;
+
+    -- Check if user has already claimed this item
+    IF EXISTS (SELECT 1 FROM claims WHERE item_id = p_item_id AND claimant_id = p_user_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Anda sudah mengklaim barang ini sebelumnya.';
+    END IF;
+
+    -- Create claim
+    INSERT INTO claims (item_id, claimant_id, status, date_claimed)
+    VALUES (p_item_id, p_user_id, 'pending', NOW());
+
+    -- Update item status
+    UPDATE items SET status = 'claimed' WHERE item_id = p_item_id;
+
+    COMMIT;
 END$$
 
 --
 -- Functions
 --
-CREATE DEFINER=`root`@`localhost` FUNCTION `fn_isItemClaimable` (`p_item_id` INT) RETURNS TINYINT(1) DETERMINISTIC BEGIN
+CREATE DEFINER=`root`@`localhost` FUNCTION `fn_isItemClaimable` (`p_item_id` INT) RETURNS TINYINT(1) DETERMINISTIC
+BEGIN
     DECLARE claimable BOOLEAN;
-
+    
     SELECT status = 'available' INTO claimable
     FROM items
     WHERE item_id = p_item_id;
-
-    RETURN claimable;
+    
+    RETURN IFNULL(claimable, FALSE);
 END$$
 
 DELIMITER ;
@@ -205,4 +228,4 @@ COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */; 

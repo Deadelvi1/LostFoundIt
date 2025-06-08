@@ -1,14 +1,21 @@
 <?php
 require_once '../includes/auth.php';
-requireLogin();
 require_once '../includes/db.php';
+requireLogin();
 
 $user_id = $_SESSION['user_id'];
 $success = '';
 $error = '';
 
+// Get all available items (both lost and found)
 try {
-    $stmt = $pdo->query("SELECT id, title, location FROM items WHERE type = 'found' AND status = 'unclaimed'");
+    $stmt = $pdo->query("
+        SELECT i.item_id, i.title, i.description, i.location, i.type, i.date_reported, u.name as reporter_name 
+        FROM items i 
+        JOIN users u ON i.user_id = u.user_id 
+        WHERE i.status = 'available'
+        ORDER BY i.date_reported DESC
+    ");
     $available_items = $stmt->fetchAll();
 } catch (Exception $e) {
     $available_items = [];
@@ -19,55 +26,117 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
     $item_id = $_POST['item_id'];
 
     try {
+        // Check if item exists and is available
+        $check = $pdo->prepare("SELECT status FROM items WHERE item_id = ?");
+        $check->execute([$item_id]);
+        $item_status = $check->fetchColumn();
+
+        if (!$item_status) {
+            throw new Exception("Barang tidak ditemukan.");
+        }
+
+        if ($item_status !== 'available') {
+            throw new Exception("Barang ini sudah diklaim.");
+        }
+
+        // Check if user has already claimed this item
         $check = $pdo->prepare("SELECT COUNT(*) FROM claims WHERE item_id = ? AND claimant_id = ?");
         $check->execute([$item_id, $user_id]);
         if ($check->fetchColumn() > 0) {
-            throw new Exception("Kamu sudah mengklaim barang ini sebelumnya.");
+            throw new Exception("Anda sudah mengklaim barang ini sebelumnya.");
         }
 
-        $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_id) VALUES (?, ?)");
+        // Create claim
+        $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_id, status) VALUES (?, ?, 'pending')");
         $stmt->execute([$item_id, $user_id]);
 
-        $stmt = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE id = ?");
-        $stmt->execute([$item_id]);
-
-        $success = "Klaim berhasil dikirim.";
+        $success = "Klaim berhasil dikirim. Silakan tunggu konfirmasi dari pemilik barang.";
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-gradient-to-r from-pink-400 via-white to-blue-400 min-h-screen">
 <head>
     <meta charset="UTF-8">
-    <title>Klaim Barang</title>
+    <title>Klaim Barang - Lost&Found IT</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-gradient-to-br from-pink-200 via-white to-blue-200 min-h-screen">
-    <div class="max-w-md mx-auto mt-10 bg-white p-6 rounded-xl shadow">
-        <h1 class="text-2xl font-bold text-center text-pink-600 mb-4">Form Klaim Barang</h1>
+<body class="min-h-screen flex flex-col">
+    <nav class="bg-pink-600 text-white p-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold">Lost&Found IT</h1>
+        <a href="dashboard.php" class="bg-white text-pink-600 font-semibold px-3 py-1 rounded hover:bg-pink-100 transition">Kembali</a>
+    </nav>
 
-        <?php if ($error): ?>
-            <p class="bg-red-100 text-red-700 p-2 rounded"><?= htmlspecialchars($error) ?></p>
-        <?php elseif ($success): ?>
-            <p class="bg-green-100 text-green-700 p-2 rounded"><?= htmlspecialchars($success) ?></p>
-        <?php endif; ?>
+    <main class="flex-grow p-6 max-w-4xl mx-auto">
+        <h2 class="text-2xl font-semibold mb-6 text-pink-700">Klaim Barang</h2>
 
-        <form method="post" class="mt-4 space-y-4">
-            <select name="item_id" required class="w-full border p-2 rounded">
-                <option value="">-- Pilih Barang --</option>
+        <?php if (empty($available_items)): ?>
+            <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                <p class="text-gray-600">Tidak ada barang yang tersedia untuk diklaim saat ini.</p>
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <?php foreach ($available_items as $item): ?>
-                    <option value="<?= $item['id'] ?>">
-                        <?= htmlspecialchars($item['title']) ?>
-                        <?= isset($item['location']) && $item['location'] ? ' - ' . htmlspecialchars($item['location']) : '' ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded">Klaim</button>
-        </form>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-semibold text-pink-600"><?= htmlspecialchars($item['title']) ?></h3>
+                            <span class="px-2 py-1 text-sm rounded <?= $item['type'] === 'lost' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' ?>">
+                                <?= $item['type'] === 'lost' ? 'Hilang' : 'Ditemukan' ?>
+                            </span>
+                        </div>
+                        
+                        <?php if ($item['location']): ?>
+                            <p class="text-gray-600 mb-2">
+                                <span class="font-medium">Lokasi:</span> <?= htmlspecialchars($item['location']) ?>
+                            </p>
+                        <?php endif; ?>
 
-        <a href="dashboard.php" class="block text-center mt-4 text-blue-600 hover:underline">Kembali ke Dashboard</a>
-    </div>
+                        <?php if ($item['description']): ?>
+                            <p class="text-gray-600 mb-2">
+                                <span class="font-medium">Deskripsi:</span> <?= htmlspecialchars($item['description']) ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <p class="text-gray-600 mb-4">
+                            <span class="font-medium">Dilaporkan oleh:</span> <?= htmlspecialchars($item['reporter_name']) ?>
+                        </p>
+
+                        <form method="post" class="mt-4">
+                            <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
+                            <button type="submit" 
+                                    class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded transition duration-200">
+                                Klaim Barang Ini
+                            </button>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </main>
+
+    <?php if ($error): ?>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '<?= addslashes($error) ?>',
+            confirmButtonColor: '#ec4899'
+        });
+    </script>
+    <?php endif; ?>
+
+    <?php if ($success): ?>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '<?= addslashes($success) ?>',
+            confirmButtonColor: '#ec4899'
+        });
+    </script>
+    <?php endif; ?>
 </body>
 </html>

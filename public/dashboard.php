@@ -1,6 +1,10 @@
 <?php
 require_once '../includes/auth.php';
+require_once '../includes/db.php';
 requireLogin();
+
+// Get user's name
+$userName = getCurrentUserName();
 ?>
 
 <!DOCTYPE html>
@@ -41,7 +45,7 @@ requireLogin();
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-bold tracking-wide">🎒 Lost&Found IT</h1>
             <div class="flex items-center space-x-4">
-                <span>Halo, <strong><?= htmlspecialchars($_SESSION['name']) ?></strong></span>
+                <span>Halo, <strong><?= htmlspecialchars($userName) ?></strong></span>
                 <a href="logout.php" class="bg-white text-pink-600 font-semibold px-4 py-1.5 rounded-full hover:bg-pink-100 transition duration-300">
                     Logout
                 </a>
@@ -90,8 +94,8 @@ requireLogin();
                     <i class="fas fa-list text-pink-600 text-3xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-xl font-semibold text-pink-700 group-hover:text-pink-800 transition-colors duration-300">Lihat Laporan</h3>
-                    <p class="text-sm text-gray-500 mt-1">Lihat semua laporan yang telah dibuat.</p>
+                    <h3 class="text-xl font-semibold text-pink-700 group-hover:text-pink-800 transition-colors duration-300">Laporan Saya</h3>
+                    <p class="text-sm text-gray-500 mt-1">Lihat status laporan barang yang telah dibuat.</p>
                 </div>
             </a>
         </div>
