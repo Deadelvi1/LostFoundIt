@@ -8,14 +8,17 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
-    $item_name = trim($_POST['item_name'] ?? '');
+    $title = trim($_POST['item_name'] ?? '');
     $description = trim($_POST['description'] ?? '');
 
-    if (!$item_name) {
+    if (!$title) {
         $error = "Nama barang wajib diisi.";
     } else {
-        $stmt = $pdo->prepare("INSERT INTO found_items (user_id, item_name, description, status, reported_at) VALUES (?, ?, ?, 'found', NOW())");
-        if ($stmt->execute([$user_id, $item_name, $description])) {
+        $stmt = $pdo->prepare("
+            INSERT INTO items (user_id, title, description, type, status, date_reported) 
+            VALUES (?, ?, ?, 'found', 'unclaimed', NOW())
+        ");
+        if ($stmt->execute([$user_id, $title, $description])) {
             $success = "Laporan barang ditemukan berhasil dikirim.";
         } else {
             $error = "Gagal mengirim laporan.";

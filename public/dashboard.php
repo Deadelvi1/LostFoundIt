@@ -31,7 +31,7 @@ requireLogin();
             <a href="claim.php" class="block bg-white rounded shadow p-6 text-center text-pink-600 hover:bg-pink-50 transition">
                 Klaim Barang
             </a>
-            <a href="#" onclick="alert('Fitur lain menyusul!'); return false;" class="block bg-white rounded shadow p-6 text-center text-pink-600 hover:bg-pink-50 transition">
+            <a href="laporan.php" class="block bg-white rounded shadow p-6 text-center text-pink-600 hover:bg-pink-50 transition">
                 Lihat Laporan
             </a>
         </div>

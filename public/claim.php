@@ -1,94 +1,73 @@
 <?php
 require_once '../includes/auth.php';
-require_once '../includes/db.php';
 requireLogin();
+require_once '../includes/db.php';
 
-$error = '';
+$user_id = $_SESSION['user_id'];
 $success = '';
+$error = '';
 
-// Ambil daftar barang found yang belum diklaim
-$stmt = $pdo->prepare("SELECT * FROM found_items WHERE status = 'found'");
-$stmt->execute();
-$found_items = $stmt->fetchAll();
+try {
+    $stmt = $pdo->query("SELECT id, title, location FROM items WHERE type = 'found' AND status = 'unclaimed'");
+    $available_items = $stmt->fetchAll();
+} catch (Exception $e) {
+    $available_items = [];
+    $error = "Gagal memuat data barang.";
+}
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user_id = $_SESSION['user_id'];
-    $item_id = $_POST['item_id'] ?? null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
+    $item_id = $_POST['item_id'];
 
-    if (!$item_id) {
-        $error = "Pilih barang yang ingin diklaim.";
-    } else {
-        try {
-            $pdo->beginTransaction();
-
-            // Cek status barang
-            $stmt = $pdo->prepare("SELECT status FROM found_items WHERE item_id = ? FOR UPDATE");
-            $stmt->execute([$item_id]);
-            $item = $stmt->fetch();
-
-            if (!$item) {
-                throw new Exception("Barang tidak ditemukan.");
-            }
-            if ($item['status'] !== 'found') {
-                throw new Exception("Barang sudah diklaim.");
-            }
-
-            // Update status jadi claimed dan assign klaim ke user
-            $stmt = $pdo->prepare("UPDATE found_items SET status = 'claimed', claimed_by = ?, claimed_at = NOW() WHERE item_id = ?");
-            $stmt->execute([$user_id, $item_id]);
-
-            $pdo->commit();
-            $success = "Berhasil mengklaim barang.";
-            // Refresh daftar barang yang bisa diklaim
-            $stmt = $pdo->prepare("SELECT * FROM found_items WHERE status = 'found'");
-            $stmt->execute();
-            $found_items = $stmt->fetchAll();
-
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            $error = $e->getMessage();
+    try {
+        $check = $pdo->prepare("SELECT COUNT(*) FROM claims WHERE item_id = ? AND claimant_id = ?");
+        $check->execute([$item_id, $user_id]);
+        if ($check->fetchColumn() > 0) {
+            throw new Exception("Kamu sudah mengklaim barang ini sebelumnya.");
         }
+
+        $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_id) VALUES (?, ?)");
+        $stmt->execute([$item_id, $user_id]);
+
+        $stmt = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE id = ?");
+        $stmt->execute([$item_id]);
+
+        $success = "Klaim berhasil dikirim.";
+    } catch (Exception $e) {
+        $error = $e->getMessage();
     }
 }
 ?>
-
 <!DOCTYPE html>
-<html lang="en" class="bg-gradient-to-r from-pink-400 via-white to-blue-400 min-h-screen">
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Klaim Barang - Lost&Found IT</title>
+    <meta charset="UTF-8">
+    <title>Klaim Barang</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen flex flex-col">
-    <nav class="bg-pink-600 text-white p-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold">Lost&Found IT</h1>
-        <a href="dashboard.php" class="bg-white text-pink-600 font-semibold px-3 py-1 rounded hover:bg-pink-100 transition">Kembali</a>
-    </nav>
-
-    <main class="flex-grow p-6 max-w-lg mx-auto">
-        <h2 class="text-2xl font-semibold mb-6 text-pink-700">Klaim Barang</h2>
+<body class="bg-gradient-to-br from-pink-200 via-white to-blue-200 min-h-screen">
+    <div class="max-w-md mx-auto mt-10 bg-white p-6 rounded-xl shadow">
+        <h1 class="text-2xl font-bold text-center text-pink-600 mb-4">Form Klaim Barang</h1>
 
         <?php if ($error): ?>
-            <div class="bg-red-100 text-red-700 p-3 rounded mb-4"><?= htmlspecialchars($error) ?></div>
+            <p class="bg-red-100 text-red-700 p-2 rounded"><?= htmlspecialchars($error) ?></p>
         <?php elseif ($success): ?>
-            <div class="bg-green-100 text-green-700 p-3 rounded mb-4"><?= htmlspecialchars($success) ?></div>
+            <p class="bg-green-100 text-green-700 p-2 rounded"><?= htmlspecialchars($success) ?></p>
         <?php endif; ?>
 
-        <?php if (count($found_items) === 0): ?>
-            <p class="text-gray-700">Tidak ada barang yang bisa diklaim saat ini.</p>
-        <?php else: ?>
-            <form method="POST" action="">
-                <label class="block mb-2 font-semibold text-gray-700" for="item_id">Pilih Barang</label>
-                <select id="item_id" name="item_id" required class="w-full border border-gray-300 rounded px-3 py-2 mb-6">
-                    <option value="">-- Pilih barang --</option>
-                    <?php foreach ($found_items as $item): ?>
-                        <option value="<?= $item['item_id'] ?>"><?= htmlspecialchars($item['item_name']) ?> - <?= htmlspecialchars($item['description']) ?></option>
-                    <?php endforeach; ?>
-                </select>
+        <form method="post" class="mt-4 space-y-4">
+            <select name="item_id" required class="w-full border p-2 rounded">
+                <option value="">-- Pilih Barang --</option>
+                <?php foreach ($available_items as $item): ?>
+                    <option value="<?= $item['id'] ?>">
+                        <?= htmlspecialchars($item['title']) ?>
+                        <?= isset($item['location']) && $item['location'] ? ' - ' . htmlspecialchars($item['location']) : '' ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <button type="submit" class="w-full bg-pink-500 text-white py-2 rounded">Klaim</button>
+        </form>
 
-                <button type="submit" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded transition">Klaim</button>
-            </form>
-        <?php endif; ?>
-    </main>
+        <a href="dashboard.php" class="block text-center mt-4 text-blue-600 hover:underline">Kembali ke Dashboard</a>
+    </div>
 </body>
 </html>
