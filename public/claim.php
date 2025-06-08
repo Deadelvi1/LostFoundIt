@@ -13,7 +13,8 @@ try {
         SELECT i.item_id, i.title, i.description, i.location, i.type, i.date_reported, u.name as reporter_name 
         FROM items i 
         JOIN users u ON i.user_id = u.user_id 
-        WHERE i.status = 'available'
+        LEFT JOIN claims c ON i.item_id = c.item_id
+        WHERE i.status = 'available' AND c.claim_id IS NULL
         ORDER BY i.date_reported DESC
     ");
     $available_items = $stmt->fetchAll();
@@ -49,6 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
         // Create claim
         $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_id, status) VALUES (?, ?, 'pending')");
         $stmt->execute([$item_id, $user_id]);
+
+        // Update item status to 'claimed' immediately as there is no admin approval
+        $stmt_update_item = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE item_id = ?");
+        $stmt_update_item->execute([$item_id]);
 
         $success = "Klaim berhasil dikirim. Silakan tunggu konfirmasi dari pemilik barang.";
     } catch (Exception $e) {
@@ -106,9 +111,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
 
                         <form method="post" class="mt-4">
                             <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
+                            <?php
+                                $button_text = '';
+                                $button_class = '';
+                                if ($item['type'] === 'found') {
+                                    $button_text = 'Klaim barang ini';
+                                    $button_class = 'bg-blue-500 hover:bg-blue-600';
+                                } elseif ($item['type'] === 'lost') {
+                                    $button_text = 'Menemukan barang ini';
+                                    $button_class = 'bg-green-500 hover:bg-green-600';
+                                } else {
+                                    $button_text = 'Lakukan Aksi'; // Fallback
+                                    $button_class = 'bg-gray-500 hover:bg-gray-600';
+                                }
+                            ?>
                             <button type="submit" 
-                                    class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded transition duration-200">
-                                Klaim Barang Ini
+                                    class="w-full text-white font-bold py-2 px-4 rounded transition duration-200 <?= $button_class ?>">
+                                <?= $button_text ?>
                             </button>
                         </form>
                     </div>
