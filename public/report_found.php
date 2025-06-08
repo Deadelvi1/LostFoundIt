@@ -8,17 +8,15 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['user_id'];
-    $title = trim($_POST['item_name'] ?? '');
+    $title = trim($_POST['title'] ?? '');
     $description = trim($_POST['description'] ?? '');
+    $location = trim($_POST['location'] ?? '');
 
     if (!$title) {
-        $error = "Nama barang wajib diisi.";
+        $error = "Judul barang wajib diisi.";
     } else {
-        $stmt = $pdo->prepare("
-            INSERT INTO items (user_id, title, description, type, status, date_reported) 
-            VALUES (?, ?, ?, 'found', 'unclaimed', NOW())
-        ");
-        if ($stmt->execute([$user_id, $title, $description])) {
+        $stmt = $pdo->prepare("INSERT INTO items (user_id, title, description, type, location, date_reported, status) VALUES (?, ?, ?, 'found', ?, CURDATE(), 'available')");
+        if ($stmt->execute([$user_id, $title, $description, $location])) {
             $success = "Laporan barang ditemukan berhasil dikirim.";
         } else {
             $error = "Gagal mengirim laporan.";
@@ -33,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8" />
     <title>Laporkan Barang Ditemukan - Lost&Found IT</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="min-h-screen flex flex-col">
     <nav class="bg-pink-600 text-white p-4 flex justify-between items-center">
@@ -43,21 +42,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main class="flex-grow p-6 max-w-lg mx-auto">
         <h2 class="text-2xl font-semibold mb-6 text-pink-700">Laporkan Barang Ditemukan</h2>
 
-        <?php if ($error): ?>
-            <div class="bg-red-100 text-red-700 p-3 rounded mb-4"><?= htmlspecialchars($error) ?></div>
-        <?php elseif ($success): ?>
-            <div class="bg-green-100 text-green-700 p-3 rounded mb-4"><?= htmlspecialchars($success) ?></div>
-        <?php endif; ?>
+        <form method="POST" action="" class="bg-white p-6 rounded-lg shadow-md" id="reportForm">
+            <div class="mb-4">
+                <label class="block mb-2 font-semibold text-gray-700" for="title">Judul Barang</label>
+                <input class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" 
+                       type="text" 
+                       id="title" 
+                       name="title" 
+                       placeholder="Contoh: Payung Merah" 
+                       required 
+                       autofocus />
+            </div>
 
-        <form method="POST" action="">
-            <label class="block mb-2 font-semibold text-gray-700" for="item_name">Nama Barang</label>
-            <input class="w-full border border-gray-300 rounded px-3 py-2 mb-4" type="text" id="item_name" name="item_name" required autofocus />
+            <div class="mb-4">
+                <label class="block mb-2 font-semibold text-gray-700" for="location">Lokasi Ditemukan</label>
+                <input class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" 
+                       type="text" 
+                       id="location" 
+                       name="location" 
+                       placeholder="Contoh: Perpustakaan" 
+                       required />
+            </div>
 
-            <label class="block mb-2 font-semibold text-gray-700" for="description">Deskripsi (opsional)</label>
-            <textarea class="w-full border border-gray-300 rounded px-3 py-2 mb-6" id="description" name="description" rows="4"></textarea>
+            <div class="mb-6">
+                <label class="block mb-2 font-semibold text-gray-700" for="description">Deskripsi Detail</label>
+                <textarea class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" 
+                          id="description" 
+                          name="description" 
+                          rows="4"
+                          placeholder="Jelaskan detail barang yang ditemukan, seperti ciri-ciri khusus, warna, ukuran, dll."></textarea>
+            </div>
 
-            <button type="submit" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded transition">Laporkan</button>
+            <button type="submit" 
+                    class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded transition duration-200">
+                Laporkan Barang Ditemukan
+            </button>
         </form>
     </main>
+
+    <?php if ($error): ?>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '<?= addslashes($error) ?>',
+            confirmButtonColor: '#ec4899'
+        });
+    </script>
+    <?php endif; ?>
+
+    <?php if ($success): ?>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '<?= addslashes($success) ?>',
+            confirmButtonColor: '#ec4899'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Clear the form
+                document.getElementById('reportForm').reset();
+            }
+        });
+    </script>
+    <?php endif; ?>
+
+    <script>
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            const title = document.getElementById('title').value.trim();
+            if (!title) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Judul barang wajib diisi.',
+                    confirmButtonColor: '#ec4899'
+                });
+            }
+        });
+    </script>
 </body>
 </html>
