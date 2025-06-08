@@ -67,7 +67,7 @@ CREATE TABLE `claims` (
   `claimant_id` int(11) NOT NULL,
   `date_claimed` datetime DEFAULT current_timestamp(),
   `status` enum('pending','approved','rejected') DEFAULT 'pending'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `claims`
@@ -105,7 +105,7 @@ CREATE TABLE `items` (
   `location` varchar(100) DEFAULT NULL,
   `date_reported` date DEFAULT curdate(),
   `status` enum('available','claimed') DEFAULT 'available'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `items`
