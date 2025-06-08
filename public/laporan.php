@@ -63,18 +63,47 @@ try {
                         <p class="text-gray-700 mb-1"><strong>Lokasi:</strong> <?= htmlspecialchars($item['location']) ?></p>
                         <p class="text-gray-700 mb-1"><strong>Deskripsi:</strong> <?= nl2br(htmlspecialchars($item['description'])) ?></p>
                         <p class="text-gray-700 mb-1"><strong>Status:</strong> 
-                            <span class="px-2 py-1 rounded <?= $item['status'] === 'available' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
-                                <?= $item['status'] === 'available' ? 'Tersedia' : 'Sudah Diklaim' ?>
+                            <?php
+                            $display_status = '';
+                            $badge_class = '';
+
+                            if ($item['claim_id']) {
+                                if ($item['type'] === 'lost') {
+                                    $display_status = 'Sudah Ditemukan'; 
+                                    $badge_class = 'bg-blue-200 text-blue-800'; 
+                                } elseif ($item['type'] === 'found') {
+                                    $display_status = 'Sudah Diklaim'; 
+                                    $badge_class = 'bg-yellow-200 text-yellow-800'; 
+                                } else {
+                                    $display_status = 'Tidak Diketahui'; // Fallback for unexpected type
+                                    $badge_class = 'bg-gray-200 text-gray-800';
+                                }
+                            } else {
+                                $display_status = 'Tersedia'; 
+                                $badge_class = 'bg-green-200 text-green-800';
+                            }
+                            ?>
+                            <span class="px-2 py-1 rounded <?= $badge_class ?>">
+                                <?= $display_status ?>
                             </span>
                         </p>
 
                         <?php if ($item['claim_id']): ?>
-                            <p class="text-gray-700 mb-1">
-                                <strong>Diklaim oleh:</strong> <?= htmlspecialchars($item['claimant_name']) ?>
-                            </p>
-                            <p class="text-gray-700">
-                                <strong>Tanggal Klaim:</strong> <?= date('d/m/Y H:i', strtotime($item['date_claimed'])) ?>
-                            </p>
+                            <?php if ($item['type'] === 'lost'): ?>
+                                <p class="text-gray-700 mb-1">
+                                    <strong>Ditemukan oleh:</strong> <?= htmlspecialchars($item['claimant_name']) ?>
+                                </p>
+                                <p class="text-gray-700">
+                                    <strong>Tanggal ditemukan:</strong> <?= date('d/m/Y H:i', strtotime($item['date_claimed'])) ?>
+                                </p>
+                            <?php elseif ($item['type'] === 'found'): ?>
+                                <p class="text-gray-700 mb-1">
+                                    <strong>Diklaim oleh:</strong> <?= htmlspecialchars($item['claimant_name']) ?>
+                                </p>
+                                <p class="text-gray-700">
+                                    <strong>Tanggal Klaim:</strong> <?= date('d/m/Y H:i', strtotime($item['date_claimed'])) ?>
+                                </p>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
