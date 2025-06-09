@@ -70,13 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="min-h-screen flex flex-col">
-    <nav class="bg-pink-600 text-white p-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold">Lost&Found IT</h1>
-        <a href="dashboard.php" class="bg-white text-pink-600 font-semibold px-3 py-1 rounded hover:bg-pink-100 transition">Kembali</a>
-    </nav>
+    <?php include '../includes/header.php'; ?>
 
-    <main class="flex-grow p-6 max-w-4xl mx-auto">
-        <h2 class="text-2xl font-semibold mb-6 text-pink-700">Klaim Barang</h2>
+    <main class="flex-grow p-6 max-w-5xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-center text-pink-700 mb-10 animate-fade-in-up">Klaim Barang</h2>
 
         <?php if (empty($available_items)): ?>
             <div class="bg-white p-6 rounded-lg shadow-md text-center">
@@ -134,7 +131,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
+
+        <div class="mt-6 text-right">
+            <a href="dashboard.php" class="inline-block bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded transition duration-200">
+                Kembali
+            </a>
+        </div>
     </main>
+
+    <?php include '../includes/footer.php'; ?>
 
     <?php if ($error): ?>
     <script>

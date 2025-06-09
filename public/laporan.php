@@ -42,77 +42,77 @@ try {
     <title>Laporan Saya - Lost&Found IT</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-br from-pink-200 via-white to-blue-200 min-h-screen p-4">
-    <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md">
-        <h2 class="text-3xl font-bold text-center text-pink-600 mb-6">Laporan Saya</h2>
+<body class="bg-gradient-to-br from-pink-200 via-white to-blue-200 min-h-screen flex flex-col">
+    <?php include '../includes/header.php'; ?>
 
-        <?php if ($error): ?>
-            <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-                <?= htmlspecialchars($error) ?>
-            </div>
-        <?php endif; ?>
+    <main class="flex-grow p-6 max-w-5xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-center text-pink-700 mb-10 animate-fade-in-up">Laporan Barang</h2>
 
-        <?php if (empty($items)): ?>
-            <p class="text-center text-gray-500">Belum ada laporan yang kamu buat.</p>
-        <?php else: ?>
-            <div class="space-y-4">
-                <?php foreach ($items as $item): ?>
-                    <div class="border rounded-lg p-4 bg-gray-50">
-                        <h3 class="text-xl font-semibold text-blue-700"><?= htmlspecialchars($item['title']) ?></h3>
-                        <p class="text-gray-700 mb-1"><strong>Jenis:</strong> <?= ucfirst($item['type']) ?></p>
-                        <p class="text-gray-700 mb-1"><strong>Lokasi:</strong> <?= htmlspecialchars($item['location']) ?></p>
-                        <p class="text-gray-700 mb-1"><strong>Deskripsi:</strong> <?= nl2br(htmlspecialchars($item['description'])) ?></p>
-                        <p class="text-gray-700 mb-1"><strong>Status:</strong> 
-                            <?php
-                            $display_status = '';
-                            $badge_class = '';
+        <div class="bg-white p-6 rounded-xl shadow-md">
+            <?php if ($error): ?>
+                <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
 
-                            if ($item['claim_id']) {
-                                if ($item['type'] === 'lost') {
-                                    $display_status = 'Sudah Ditemukan'; 
-                                    $badge_class = 'bg-blue-200 text-blue-800'; 
-                                } elseif ($item['type'] === 'found') {
-                                    $display_status = 'Sudah Diklaim'; 
-                                    $badge_class = 'bg-yellow-200 text-yellow-800'; 
-                                } else {
-                                    $display_status = 'Tidak Diketahui'; // Fallback for unexpected type
-                                    $badge_class = 'bg-gray-200 text-gray-800';
-                                }
-                            } else {
-                                $display_status = 'Tersedia'; 
-                                $badge_class = 'bg-green-200 text-green-800';
-                            }
-                            ?>
-                            <span class="px-2 py-1 rounded <?= $badge_class ?>">
-                                <?= $display_status ?>
-                            </span>
-                        </p>
-
-                        <?php if ($item['claim_id']): ?>
-                            <?php if ($item['type'] === 'lost'): ?>
-                                <p class="text-gray-700 mb-1">
-                                    <strong>Ditemukan oleh:</strong> <?= htmlspecialchars($item['claimant_name']) ?>
-                                </p>
-                                <p class="text-gray-700">
-                                    <strong>Tanggal ditemukan:</strong> <?= date('d/m/Y H:i', strtotime($item['date_claimed'])) ?>
-                                </p>
-                            <?php elseif ($item['type'] === 'found'): ?>
-                                <p class="text-gray-700 mb-1">
-                                    <strong>Diklaim oleh:</strong> <?= htmlspecialchars($item['claimant_name']) ?>
-                                </p>
-                                <p class="text-gray-700">
-                                    <strong>Tanggal Klaim:</strong> <?= date('d/m/Y H:i', strtotime($item['date_claimed'])) ?>
+            <?php if (empty($items)): ?>
+                <div class="text-center py-8">
+                    <p class="text-gray-600">Belum ada laporan barang.</p>
+                </div>
+            <?php else: ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <?php foreach ($items as $item): ?>
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-lg font-semibold text-pink-600"><?= htmlspecialchars($item['title']) ?></h3>
+                                <span class="px-2 py-1 text-sm rounded <?= $item['type'] === 'lost' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' ?>">
+                                    <?= $item['type'] === 'lost' ? 'Hilang' : 'Ditemukan' ?>
+                                </span>
+                            </div>
+                            
+                            <?php if ($item['location']): ?>
+                                <p class="text-gray-600 mb-2">
+                                    <span class="font-medium">Lokasi:</span> <?= htmlspecialchars($item['location']) ?>
                                 </p>
                             <?php endif; ?>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
 
-        <div class="mt-6 text-center">
-            <a href="dashboard.php" class="text-blue-600 hover:underline">← Kembali ke Dashboard</a>
+                            <?php if ($item['description']): ?>
+                                <p class="text-gray-600 mb-2">
+                                    <span class="font-medium">Deskripsi:</span> <?= htmlspecialchars($item['description']) ?>
+                                </p>
+                            <?php endif; ?>
+
+                            <p class="text-gray-600 mb-2">
+                                <span class="font-medium">Status:</span> 
+                                <span class="px-2 py-1 text-sm rounded <?= $item['status'] === 'available' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' ?>">
+                                    <?= $item['status'] === 'available' ? 'Tersedia' : 'Diklaim' ?>
+                                </span>
+                            </p>
+
+                            <p class="text-gray-600 mb-2">
+                                <span class="font-medium">Tanggal Dilaporkan:</span> 
+                                <?= date('d F Y', strtotime($item['date_reported'])) ?>
+                            </p>
+
+                            <?php if ($item['status'] === 'claimed'): ?>
+                                <p class="text-gray-600">
+                                    <span class="font-medium">Diklaim oleh:</span> 
+                                    <?= htmlspecialchars($item['claimant_name']) ?>
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
-    </div>
+
+        <div class="mt-6 text-right">
+            <a href="dashboard.php" class="inline-block bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded transition duration-200">
+                Kembali
+            </a>
+        </div>
+    </main>
+
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

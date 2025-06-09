@@ -39,19 +39,7 @@ $userName = getCurrentUserName();
     </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans text-gray-800">
-
-    <!-- Navbar -->
-    <nav class="bg-pink-600 text-white p-4 shadow-lg sticky top-0 z-10">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-wide">🎒 Lost&Found IT</h1>
-            <div class="flex items-center space-x-4">
-                <span>Halo, <strong><?= htmlspecialchars($userName) ?></strong></span>
-                <a href="logout.php" class="bg-white text-pink-600 font-semibold px-4 py-1.5 rounded-full hover:bg-pink-100 transition duration-300">
-                    Logout
-                </a>
-            </div>
-        </div>
-    </nav>
+    <?php include '../includes/header.php'; ?>
 
     <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 py-10">
@@ -101,10 +89,6 @@ $userName = getCurrentUserName();
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="text-center text-sm text-gray-600 py-6">
-        &copy; <?= date("Y") ?> Lost&Found IT. Semua hak dilindungi.
-    </footer>
-
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

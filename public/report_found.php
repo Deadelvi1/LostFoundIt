@@ -34,36 +34,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="min-h-screen flex flex-col">
-    <nav class="bg-pink-600 text-white p-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold">Lost&Found IT</h1>
-        <a href="dashboard.php" class="bg-white text-pink-600 font-semibold px-3 py-1 rounded hover:bg-pink-100 transition">Kembali</a>
-    </nav>
+    <?php include '../includes/header.php'; ?>
 
-    <main class="flex-grow p-6 max-w-lg mx-auto">
-        <h2 class="text-2xl font-semibold mb-6 text-pink-700">Laporkan Barang Ditemukan</h2>
+    <main class="flex-grow p-6 w-full">
+        <h2 class="text-3xl font-extrabold text-center text-pink-700 mb-10 animate-fade-in-up">Laporkan Barang Ditemukan</h2>
 
-        <form method="POST" action="" class="bg-white p-6 rounded-lg shadow-md" id="reportForm">
+        <form method="POST" action="" class="bg-white p-8 rounded-lg shadow-md w-full max-w-5xl mx-auto" id="reportForm">
             <div class="mb-4">
                 <label class="block mb-2 font-semibold text-gray-700" for="title">Judul Barang</label>
                 <input class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" 
                        type="text" 
                        id="title" 
                        name="title" 
-                       placeholder="Contoh: Payung Merah" 
+                       placeholder="Contoh: Dompet Hitam" 
                        required 
                        autofocus />
             </div>
-
             <div class="mb-4">
                 <label class="block mb-2 font-semibold text-gray-700" for="location">Lokasi Ditemukan</label>
                 <input class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" 
                        type="text" 
                        id="location" 
                        name="location" 
-                       placeholder="Contoh: Perpustakaan" 
+                       placeholder="Contoh: Gedung A" 
                        required />
             </div>
-
             <div class="mb-6">
                 <label class="block mb-2 font-semibold text-gray-700" for="description">Deskripsi Detail</label>
                 <textarea class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" 
@@ -72,13 +67,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           rows="4"
                           placeholder="Jelaskan detail barang yang ditemukan, seperti ciri-ciri khusus, warna, ukuran, dll."></textarea>
             </div>
-
-            <button type="submit" 
-                    class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded transition duration-200">
-                Laporkan Barang Ditemukan
-            </button>
         </form>
+
+        <div class="w-full max-w-5xl mx-auto flex justify-end items-center gap-4 mt-6">
+            <a href="dashboard.php" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded transition duration-200 text-center">Kembali</a>
+            <button type="submit" form="reportForm" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded transition duration-200">Laporkan Barang Ditemukan</button>
+        </div>
     </main>
+
+    <?php include '../includes/footer.php'; ?>
 
     <?php if ($error): ?>
     <script>
@@ -98,28 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             title: 'Berhasil!',
             text: '<?= addslashes($success) ?>',
             confirmButtonColor: '#ec4899'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Clear the form
-                document.getElementById('reportForm').reset();
-            }
         });
     </script>
     <?php endif; ?>
-
-    <script>
-        document.getElementById('reportForm').addEventListener('submit', function(e) {
-            const title = document.getElementById('title').value.trim();
-            if (!title) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Judul barang wajib diisi.',
-                    confirmButtonColor: '#ec4899'
-                });
-            }
-        });
-    </script>
 </body>
 </html>
