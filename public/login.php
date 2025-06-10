@@ -2,7 +2,6 @@
 require_once '../includes/db.php';
 session_start();
 
-// Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
     header('Location: dashboard.php');
     exit;
@@ -26,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['name'] = $user['name'];
                 
-                // Debug information
                 error_log("Login successful for user: " . $user['email']);
                 
                 header('Location: dashboard.php');

@@ -7,7 +7,6 @@ $user_id = $_SESSION['user_id'];
 $error = '';
 
 try {
-    // Get all items with their claim status and claimant info
     $stmt = $pdo->query("
         SELECT 
             i.item_id,

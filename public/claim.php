@@ -7,7 +7,6 @@ $user_id = $_SESSION['user_id'];
 $success = '';
 $error = '';
 
-// Get all available items (both lost and found)
 try {
     $stmt = $pdo->query("
         SELECT i.item_id, i.title, i.description, i.location, i.type, i.date_reported, u.name as reporter_name 
@@ -27,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
     $item_id = $_POST['item_id'];
 
     try {
-        // Check if item exists and is available
         $check = $pdo->prepare("SELECT status FROM items WHERE item_id = ?");
         $check->execute([$item_id]);
         $item_status = $check->fetchColumn();
@@ -39,19 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
         if ($item_status !== 'available') {
             throw new Exception("Barang ini sudah diklaim.");
         }
-
-        // Check if user has already claimed this item
         $check = $pdo->prepare("SELECT COUNT(*) FROM claims WHERE item_id = ? AND claimant_id = ?");
         $check->execute([$item_id, $user_id]);
         if ($check->fetchColumn() > 0) {
             throw new Exception("Anda sudah mengklaim barang ini sebelumnya.");
         }
 
-        // Create claim
         $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_id, status) VALUES (?, ?, 'pending')");
         $stmt->execute([$item_id, $user_id]);
 
-        // Update item status to 'claimed' immediately as there is no admin approval
         $stmt_update_item = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE item_id = ?");
         $stmt_update_item->execute([$item_id]);
 

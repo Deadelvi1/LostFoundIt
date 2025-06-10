@@ -3,7 +3,6 @@ require_once '../includes/auth.php';
 require_once '../includes/db.php';
 requireLogin();
 
-// Get user's name
 $userName = getCurrentUserName();
 ?>
 
@@ -41,12 +40,10 @@ $userName = getCurrentUserName();
 <body class="min-h-screen flex flex-col font-sans text-gray-800">
     <?php include '../includes/header.php'; ?>
 
-    <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 py-10">
         <h2 class="text-3xl font-extrabold text-center text-pink-700 mb-10 animate-fade-in-up">Dashboard</h2>
 
         <div class="max-w-2xl mx-auto space-y-6">
-            <!-- Menu Card -->
             <a href="report_lost.php" class="group bg-white rounded-2xl shadow-lg p-8 flex items-center space-x-6 transform hover:scale-105 transition-all duration-300 hover:shadow-pink-200 animate-fade-in-up">
                 <div class="bg-pink-50 p-4 rounded-xl group-hover:bg-pink-100 transition-colors duration-300">
                     <i class="fas fa-search text-pink-600 text-3xl"></i>
@@ -84,6 +81,18 @@ $userName = getCurrentUserName();
                 <div>
                     <h3 class="text-xl font-semibold text-pink-700 group-hover:text-pink-800 transition-colors duration-300">Laporan Saya</h3>
                     <p class="text-sm text-gray-500 mt-1">Lihat status laporan barang yang telah dibuat.</p>
+                </div>
+            </a>
+
+            <a href="backup_db.php"
+               onclick="return confirm('Yakin ingin mengunduh backup database?')"
+               class="group bg-white rounded-2xl shadow-lg p-8 flex items-center space-x-6 transform hover:scale-105 transition-all duration-300 hover:shadow-pink-200 animate-fade-in-up delay-400">
+                <div class="bg-pink-50 p-4 rounded-xl group-hover:bg-pink-100 transition-colors duration-300">
+                    <i class="fas fa-database text-pink-600 text-3xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-pink-700 group-hover:text-pink-800 transition-colors duration-300">Download Backup Database</h3>
+                    <p class="text-sm text-gray-500 mt-1">Simpan salinan data kamu dalam format SQL.</p>
                 </div>
             </a>
         </div>

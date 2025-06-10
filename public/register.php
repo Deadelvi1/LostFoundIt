@@ -2,7 +2,6 @@
 require_once '../includes/db.php';
 session_start();
 
-// Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
     header('Location: dashboard.php');
     exit;
@@ -17,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
 
-    // Debug information
     error_log("Registration attempt - Email: " . $email);
 
     if (empty($name) || empty($email) || empty($password) || empty($confirm_password)) {
@@ -28,13 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Password minimal 6 karakter.";
     } else {
         try {
-            // Check if email already exists
             $stmt = $pdo->prepare("SELECT 1 FROM users WHERE email = ?");
             $stmt->execute([$email]);
             if ($stmt->fetch()) {
                 $error = "Email sudah terdaftar.";
             } else {
-                // Insert new user
                 $stmt = $pdo->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 $stmt->execute([$name, $email, $hashed_password]);
@@ -43,13 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $success = "Registrasi berhasil! Silakan login.";
                 
-                // Redirect to login after 2 seconds
                 header("refresh:2;url=login.php");
             }
         } catch (Exception $e) {
-            // Temporarily display the full error for debugging
             $error = "Terjadi kesalahan: " . $e->getMessage();
-            // Original line: error_log("Registration error: " . $e->getMessage());
         }
     }
 }
