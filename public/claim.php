@@ -26,28 +26,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
     $item_id = $_POST['item_id'];
 
     try {
-        $check = $pdo->prepare("SELECT status FROM items WHERE item_id = ?");
+        // Check if item is claimable using the function
+        $check = $pdo->prepare("SELECT fn_isItemClaimable(?) as is_claimable");
         $check->execute([$item_id]);
-        $item_status = $check->fetchColumn();
+        $is_claimable = $check->fetchColumn();
 
-        if (!$item_status) {
-            throw new Exception("Barang tidak ditemukan.");
+        if (!$is_claimable) {
+            throw new Exception("Barang tidak tersedia untuk diklaim.");
         }
 
-        if ($item_status !== 'available') {
-            throw new Exception("Barang ini sudah diklaim.");
-        }
-        $check = $pdo->prepare("SELECT COUNT(*) FROM claims WHERE item_id = ? AND claimant_id = ?");
-        $check->execute([$item_id, $user_id]);
-        if ($check->fetchColumn() > 0) {
-            throw new Exception("Anda sudah mengklaim barang ini sebelumnya.");
-        }
-
-        $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_id, status) VALUES (?, ?, 'pending')");
-        $stmt->execute([$item_id, $user_id]);
-
-        $stmt_update_item = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE item_id = ?");
-        $stmt_update_item->execute([$item_id]);
+        // Use the stored procedure to claim the item
+        $stmt = $pdo->prepare("CALL sp_claimItem(?, ?)");
+        $stmt->execute([$user_id, $item_id]);
 
         $success = "Klaim berhasil dikirim. Silakan tunggu konfirmasi dari pemilik barang.";
     } catch (Exception $e) {

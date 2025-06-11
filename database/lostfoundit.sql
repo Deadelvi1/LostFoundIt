@@ -37,18 +37,21 @@ BEGIN
     START TRANSACTION;
 
     -- Check if item exists and is available
-    SELECT status INTO item_status FROM items WHERE item_id = p_item_id;
+    SELECT status INTO item_status FROM items WHERE item_id = p_item_id FOR UPDATE;
 
     IF item_status IS NULL THEN
+        ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Barang tidak ditemukan.';
     END IF;
 
     IF item_status != 'available' THEN
+        ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Barang tidak tersedia untuk diklaim.';
     END IF;
 
     -- Check if user has already claimed this item
     IF EXISTS (SELECT 1 FROM claims WHERE item_id = p_item_id AND claimant_id = p_user_id) THEN
+        ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Anda sudah mengklaim barang ini sebelumnya.';
     END IF;
 

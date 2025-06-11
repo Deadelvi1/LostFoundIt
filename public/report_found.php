@@ -15,11 +15,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$title) {
         $error = "Judul barang wajib diisi.";
     } else {
-        $stmt = $pdo->prepare("INSERT INTO items (user_id, title, description, type, location, date_reported, status) VALUES (?, ?, ?, 'found', ?, CURDATE(), 'available')");
-        if ($stmt->execute([$user_id, $title, $description, $location])) {
+        try {
+            $pdo->beginTransaction();
+
+            // Insert ke tabel items
+            $stmt = $pdo->prepare("INSERT INTO items (user_id, title, description, type, location, date_reported, status) VALUES (?, ?, ?, 'found', ?, CURDATE(), 'available')");
+            if (!$stmt->execute([$user_id, $title, $description, $location])) {
+                throw new Exception("Gagal menyimpan data barang.");
+            }
+
+            // Log aktivitas
+            $item_id = $pdo->lastInsertId();
+            $log_stmt = $pdo->prepare("INSERT INTO activity_logs (user_id, item_id, activity_type, activity_date) VALUES (?, ?, 'report_found', NOW())");
+            $log_stmt->execute([$user_id, $item_id]);
+
+            $pdo->commit();
             $success = "Laporan barang ditemukan berhasil dikirim.";
-        } else {
-            $error = "Gagal mengirim laporan.";
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $error = $e->getMessage() ?: "Gagal mengirim laporan.";
         }
     }
 }
