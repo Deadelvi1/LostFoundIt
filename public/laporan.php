@@ -55,63 +55,143 @@ try {
             <?php endif; ?>
 
             <?php if (empty($items)): ?>
-                <div class="text-center py-8">
-                    <p class="text-gray-600">Belum ada laporan barang.</p>
-                </div>
+                <p class="text-gray-500 text-center py-4">Belum ada laporan barang.</p>
             <?php else: ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <?php foreach ($items as $item): ?>
-                        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                            <div class="flex justify-between items-start mb-4">
-                                <h3 class="text-lg font-semibold text-pink-600"><?= htmlspecialchars($item['title']) ?></h3>
-                                <span class="px-2 py-1 text-sm rounded <?= $item['type'] === 'lost' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' ?>">
-                                    <?= $item['type'] === 'lost' ? 'Hilang' : 'Ditemukan' ?>
-                                </span>
-                            </div>
-                            
-                            <?php if ($item['location']): ?>
-                                <p class="text-gray-600 mb-2">
-                                    <span class="font-medium">Lokasi:</span> <?= htmlspecialchars($item['location']) ?>
-                                </p>
-                            <?php endif; ?>
-
-                            <?php if ($item['description']): ?>
-                                <p class="text-gray-600 mb-2">
-                                    <span class="font-medium">Deskripsi:</span> <?= htmlspecialchars($item['description']) ?>
-                                </p>
-                            <?php endif; ?>
-
-                            <p class="text-gray-600 mb-2">
-                                <span class="font-medium">Status:</span> 
-                                <span class="px-2 py-1 text-sm rounded <?= $item['status'] === 'available' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' ?>">
-                                    <?= $item['status'] === 'available' ? 'Tersedia' : 'Diklaim' ?>
-                                </span>
-                            </p>
-
-                            <p class="text-gray-600 mb-2">
-                                <span class="font-medium">Tanggal Dilaporkan:</span> 
-                                <?= date('d F Y', strtotime($item['date_reported'])) ?>
-                            </p>
-
-                            <?php if ($item['status'] === 'claimed'): ?>
-                                <p class="text-gray-600">
-                                    <span class="font-medium">Diklaim oleh:</span> 
-                                    <?= htmlspecialchars($item['claimant_name']) ?>
-                                </p>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Klaim</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <?php foreach ($items as $item): ?>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($item['title']) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs rounded-full <?= $item['type'] === 'lost' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' ?>">
+                                            <?= ucfirst($item['type']) ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs rounded-full <?= $item['status'] === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?>">
+                                            <?= ucfirst($item['status']) ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?= htmlspecialchars($item['location']) ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?= date('d F Y', strtotime($item['date_reported'])) ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php if ($item['claim_status']): ?>
+                                            <div class="text-sm">
+                                                <span class="px-2 py-1 text-xs rounded-full 
+                                                    <?= $item['claim_status'] === 'approved' ? 'bg-green-100 text-green-800' : 
+                                                        ($item['claim_status'] === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') ?>">
+                                                    <?= ucfirst($item['claim_status']) ?>
+                                                </span>
+                                                <?php if ($item['claimant_name']): ?>
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        Oleh: <?= htmlspecialchars($item['claimant_name']) ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="text-gray-400 text-sm">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="item_detail.php?id=<?= $item['item_id'] ?>" 
+                                           class="text-pink-600 hover:text-pink-900">Lihat Detail</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             <?php endif; ?>
         </div>
-
-        <div class="mt-6 text-right">
-            <a href="dashboard.php" class="inline-block bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded transition duration-200">
-                Kembali
-            </a>
-        </div>
     </main>
+
+    <div class="w-full max-w-5xl mx-auto flex justify-center mt-6 mb-10">
+        <a href="dashboard.php" 
+           class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded transition duration-200">
+            Kembali ke Dashboard
+        </a>
+    </div>
 
     <?php include '../includes/footer.php'; ?>
 </body>
 </html>
+
+<style>
+    .status-badge {
+        @apply px-3 py-1 rounded-full text-sm font-semibold;
+    }
+    .status-available {
+        @apply bg-green-100 text-green-800;
+    }
+    .status-claimed {
+        @apply bg-red-100 text-red-800;
+    }
+    .claim-status {
+        @apply px-3 py-1 rounded-full text-sm font-semibold;
+    }
+    .claim-pending {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+    .claim-approved {
+        @apply bg-green-100 text-green-800;
+    }
+    .claim-rejected {
+        @apply bg-red-100 text-red-800;
+    }
+</style>
+
+<script>
+    // Add tooltips for status badges
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusBadges = document.querySelectorAll('.status-badge');
+        statusBadges.forEach(badge => {
+            const status = badge.textContent.trim().toLowerCase();
+            let tooltip = '';
+            switch(status) {
+                case 'available':
+                    tooltip = 'Barang masih tersedia untuk diklaim';
+                    break;
+                case 'claimed':
+                    tooltip = 'Barang sudah diklaim';
+                    break;
+            }
+            badge.title = tooltip;
+        });
+
+        const claimBadges = document.querySelectorAll('.claim-status');
+        claimBadges.forEach(badge => {
+            const status = badge.textContent.trim().toLowerCase();
+            let tooltip = '';
+            switch(status) {
+                case 'pending':
+                    tooltip = 'Klaim sedang diproses';
+                    break;
+                case 'approved':
+                    tooltip = 'Klaim telah disetujui';
+                    break;
+                case 'rejected':
+                    tooltip = 'Klaim ditolak';
+                    break;
+            }
+            badge.title = tooltip;
+        });
+    });
+</script>

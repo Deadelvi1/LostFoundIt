@@ -17,6 +17,23 @@ PREPARE alterIfNotExists FROM @preparedStatement;
 EXECUTE alterIfNotExists;
 DEALLOCATE PREPARE alterIfNotExists;
 
+-- Update tabel items untuk menambah kolom photo jika belum ada
+SET @columnname = 'photo';
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE 
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname)
+  ) > 0,
+  "SELECT 'Column photo already exists in items'",
+  "ALTER TABLE items ADD COLUMN photo VARCHAR(255) DEFAULT NULL AFTER type"
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
 -- Update tabel claims untuk menambah kolom claim_date jika belum ada
 SET @tablename = 'claims';
 SET @columnname = 'claim_date';
@@ -99,6 +116,7 @@ BEGIN
     INSERT INTO claims (item_id, claimant_id, status, claim_date) 
     VALUES (p_item_id, p_user_id, 'pending', NOW());
 
+    -- Update status item menjadi claimed
     UPDATE items 
     SET status = 'claimed' 
     WHERE item_id = p_item_id;
@@ -140,11 +158,10 @@ CREATE TRIGGER `trg_after_claim`
 AFTER INSERT ON `claims` 
 FOR EACH ROW 
 BEGIN
-    IF NEW.status = 'approved' THEN
-        UPDATE items 
-        SET status = 'claimed' 
-        WHERE item_id = NEW.item_id;
-    END IF;
+    -- Update status item menjadi claimed saat ada klaim baru
+    UPDATE items 
+    SET status = 'claimed' 
+    WHERE item_id = NEW.item_id;
 END //
 
 DELIMITER ; 
