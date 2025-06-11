@@ -26,18 +26,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
     $item_id = $_POST['item_id'];
 
     try {
-        // Check if item is claimable using the function
-        $check = $pdo->prepare("SELECT fn_isItemClaimable(?) as is_claimable");
+        $check = $pdo->prepare("SELECT status FROM items WHERE item_id = ?");
         $check->execute([$item_id]);
-        $is_claimable = $check->fetchColumn();
+        $item_status = $check->fetchColumn();
 
-        if (!$is_claimable) {
-            throw new Exception("Barang tidak tersedia untuk diklaim.");
+        if (!$item_status) {
+            throw new Exception("Barang tidak ditemukan.");
         }
 
-        // Use the stored procedure to claim the item
-        $stmt = $pdo->prepare("CALL sp_claimItem(?, ?)");
-        $stmt->execute([$user_id, $item_id]);
+        if ($item_status !== 'available') {
+            throw new Exception("Barang ini sudah diklaim.");
+        }
+        $check = $pdo->prepare("SELECT COUNT(*) FROM claims WHERE item_id = ? AND claimant_id = ?");
+        $check->execute([$item_id, $user_id]);
+        if ($check->fetchColumn() > 0) {
+            throw new Exception("Anda sudah mengklaim barang ini sebelumnya.");
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO claims (item_id, claimant_id, status) VALUES (?, ?, 'pending')");
+        $stmt->execute([$item_id, $user_id]);
+
+        $stmt_update_item = $pdo->prepare("UPDATE items SET status = 'claimed' WHERE item_id = ?");
+        $stmt_update_item->execute([$item_id]);
 
         $success = "Klaim berhasil dikirim. Silakan tunggu konfirmasi dari pemilik barang.";
     } catch (Exception $e) {
@@ -50,97 +60,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['item_id'])) {
 <head>
     <meta charset="UTF-8">
     <title>Klaim Barang - Lost&Found IT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?v=1.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="min-h-screen flex flex-col">
     <?php include '../includes/header.php'; ?>
 
-    <main class="flex-grow p-6 w-full">
-        <div class="max-w-7xl mx-auto">
-            <h2 class="text-3xl font-extrabold text-center text-pink-700 mb-10">Klaim Barang</h2>
+    <main class="flex-grow p-6 max-w-screen-xl mx-auto">
+        <h2 class="text-3xl font-extrabold text-center text-pink-700 mb-10 animate-fade-in-up">Klaim Barang</h2>
 
-            <?php if ($error): ?>
-                <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-                    <?= htmlspecialchars($error) ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if ($success): ?>
-                <div class="bg-green-100 text-green-700 p-3 rounded mb-4">
-                    <?= htmlspecialchars($success) ?>
-                </div>
-            <?php endif; ?>
-
-            <?php if (empty($available_items)): ?>
-                <div class="text-center text-gray-600 mt-8">
-                    <p class="text-lg">Tidak ada barang yang tersedia untuk diklaim.</p>
-                </div>
-            <?php else: ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <?php foreach ($available_items as $item): ?>
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
-                            <!-- Item Photo -->
-                            <div class="h-48 bg-gray-200 relative">
-                                <?php if ($item['photo']): ?>
-                                    <img src="../<?= htmlspecialchars($item['photo']) ?>" 
-                                         alt="<?= htmlspecialchars($item['title']) ?>" 
-                                         class="w-full h-full object-cover">
-                                <?php else: ?>
-                                    <div class="w-full h-full flex items-center justify-center text-gray-500">
-                                        <i class="fas fa-image text-4xl"></i>
-                                    </div>
-                                <?php endif; ?>
-                                <div class="absolute top-2 right-2">
-                                    <span class="px-2 py-1 rounded-full text-xs font-semibold
-                                        <?= $item['type'] === 'lost' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' ?>">
-                                        <?= ucfirst($item['type']) ?>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Item Info -->
-                            <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-2">
-                                    <?= htmlspecialchars($item['title']) ?>
-                                </h3>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <i class="fas fa-map-marker-alt mr-2"></i>
-                                    <?= htmlspecialchars($item['location']) ?>
-                                </p>
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <i class="fas fa-user mr-2"></i>
-                                    Dilaporkan oleh: <?= htmlspecialchars($item['reporter_name']) ?>
-                                </p>
-                                <p class="text-sm text-gray-600 mb-4">
-                                    <i class="fas fa-calendar mr-2"></i>
-                                    <?= date('d F Y', strtotime($item['date_reported'])) ?>
-                                </p>
-
-                                <!-- Claim Button -->
-                                <form method="post" class="mt-4">
-                                    <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
-                                    <button type="submit" 
-                                            class="block w-full bg-pink-500 hover:bg-pink-600 text-white text-center font-bold py-2 px-4 rounded transition duration-300"
-                                            onclick="return confirm('Apakah Anda yakin ingin mengklaim barang ini?')">
-                                        Klaim Barang
-                                    </button>
-                                </form>
-                            </div>
+        <?php if (empty($available_items)): ?>
+            <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                <p class="text-gray-600">Tidak ada barang yang tersedia untuk diklaim saat ini.</p>
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <?php foreach ($available_items as $item): ?>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-semibold text-pink-600"><?= htmlspecialchars($item['title']) ?></h3>
+                            <span class="px-2 py-1 text-sm rounded <?= $item['type'] === 'lost' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' ?>">
+                                <?= $item['type'] === 'lost' ? 'Hilang' : 'Ditemukan' ?>
+                            </span>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+
+                        <?php if ($item['photo']): ?>
+                            <div class="mb-4 overflow-hidden rounded-lg">
+                                <img src="get_image.php?path=<?= htmlspecialchars($item['photo']) ?>" 
+                                     alt="<?= htmlspecialchars($item['title']) ?>" 
+                                     class="w-full h-48 object-cover object-center">
+                            </div>
+                        <?php else: ?>
+                            <div class="mb-4 w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500">
+                                <i class="fas fa-image text-4xl"></i>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <?php if ($item['location']): ?>
+                            <p class="text-gray-600 mb-2">
+                                <span class="font-medium">Lokasi:</span> <?= htmlspecialchars($item['location']) ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <?php if ($item['description']): ?>
+                            <p class="text-gray-600 mb-2">
+                                <span class="font-medium">Deskripsi:</span> <?= htmlspecialchars($item['description']) ?>
+                            </p>
+                        <?php endif; ?>
+
+                        <p class="text-gray-600 mb-4">
+                            <span class="font-medium">Dilaporkan oleh:</span> <?= htmlspecialchars($item['reporter_name']) ?>
+                        </p>
+
+                        <form method="post" class="mt-4">
+                            <input type="hidden" name="item_id" value="<?= $item['item_id'] ?>">
+                            <?php
+                                $button_text = '';
+                                $button_class = '';
+                                if ($item['type'] === 'found') {
+                                    $button_text = 'Klaim barang ini';
+                                    $button_class = 'bg-blue-500 hover:bg-blue-600';
+                                } elseif ($item['type'] === 'lost') {
+                                    $button_text = 'Menemukan barang ini';
+                                    $button_class = 'bg-green-500 hover:bg-green-600';
+                                } else {
+                                    $button_text = 'Lakukan Aksi'; // Fallback
+                                    $button_class = 'bg-gray-500 hover:bg-gray-600';
+                                }
+                            ?>
+                            <button type="submit" 
+                                    class="w-full text-white font-bold py-2 px-4 rounded transition duration-200 <?= $button_class ?>">
+                                <?= $button_text ?>
+                            </button>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="mt-6 text-right">
+            <a href="dashboard.php" class="inline-block bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded transition duration-200">
+                Kembali
+            </a>
         </div>
     </main>
 
-    <div class="w-full max-w-5xl mx-auto flex justify-center mt-6 mb-10">
-        <a href="dashboard.php" 
-           class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-8 rounded transition duration-200">
-            Kembali ke Dashboard
-        </a>
-    </div>
-
     <?php include '../includes/footer.php'; ?>
+
+    <?php if ($error): ?>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '<?= addslashes($error) ?>',
+            confirmButtonColor: '#ec4899'
+        });
+    </script>
+    <?php endif; ?>
+
+    <?php if ($success): ?>
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '<?= addslashes($success) ?>',
+            confirmButtonColor: '#ec4899'
+        });
+    </script>
+    <?php endif; ?>
 </body>
 </html>

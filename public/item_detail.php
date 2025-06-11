@@ -52,7 +52,7 @@ if (isset($_GET['id'])) {
                     <!-- Foto Barang -->
                     <div class="space-y-4">
                         <?php if ($item['photo']): ?>
-                            <img src="../<?= htmlspecialchars($item['photo']) ?>" 
+                            <img src="get_image.php?path=<?= htmlspecialchars($item['photo']) ?>" 
                                  alt="<?= htmlspecialchars($item['title']) ?>" 
                                  class="w-full h-64 object-cover rounded-lg shadow-md">
                         <?php else: ?>
