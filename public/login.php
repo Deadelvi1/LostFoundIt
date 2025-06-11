@@ -17,15 +17,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Email dan password harus diisi.";
     } else {
         try {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt = $pdo->prepare("SELECT user_id, name, email, role FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['name'] = $user['name'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['role'] = $user['role'];
                 
                 error_log("Login successful for user: " . $user['email']);
+                
+                $stmt = $pdo->prepare("
+                    INSERT INTO activity_logs (user_id, activity_type, details)
+                    VALUES (?, 'login', 'User logged in successfully')
+                ");
+                $stmt->execute([$user['user_id']]);
                 
                 header('Location: dashboard.php');
                 exit;

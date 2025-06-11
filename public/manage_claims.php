@@ -135,26 +135,28 @@ try {
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <?php if ($claim['claim_status'] === 'pending'): ?>
-                                                <form method="POST" class="inline-block">
-                                                    <input type="hidden" name="claim_id" value="<?= $claim['claim_id'] ?>">
-                                                    <input type="hidden" name="status" value="approved">
-                                                    <button type="submit" 
-                                                            class="text-green-600 hover:text-green-900 mr-3"
-                                                            onclick="return confirm('Setujui klaim ini?')">
-                                                        <i class="fas fa-check"></i> Setujui
-                                                    </button>
-                                                </form>
-                                                <form method="POST" class="inline-block">
-                                                    <input type="hidden" name="claim_id" value="<?= $claim['claim_id'] ?>">
-                                                    <input type="hidden" name="status" value="rejected">
-                                                    <button type="submit" 
-                                                            class="text-red-600 hover:text-red-900"
-                                                            onclick="return confirm('Tolak klaim ini?')">
-                                                        <i class="fas fa-times"></i> Tolak
-                                                    </button>
-                                                </form>
+                                                <div class="flex space-x-3">
+                                                    <form method="POST" class="inline-block">
+                                                        <input type="hidden" name="claim_id" value="<?= $claim['claim_id'] ?>">
+                                                        <input type="hidden" name="status" value="approved">
+                                                        <button type="submit" 
+                                                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded transition duration-200 flex items-center"
+                                                                onclick="return confirm('Setujui klaim ini?')">
+                                                            <i class="fas fa-check mr-1"></i> Setujui
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" class="inline-block">
+                                                        <input type="hidden" name="claim_id" value="<?= $claim['claim_id'] ?>">
+                                                        <input type="hidden" name="status" value="rejected">
+                                                        <button type="submit" 
+                                                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition duration-200 flex items-center"
+                                                                onclick="return confirm('Tolak klaim ini?')">
+                                                            <i class="fas fa-times mr-1"></i> Tolak
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             <?php else: ?>
-                                                <span class="text-gray-400">Tidak ada aksi</span>
+                                                <span class="text-gray-400 italic">Tidak ada aksi</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>

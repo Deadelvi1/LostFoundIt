@@ -74,6 +74,7 @@ BEGIN
     DECLARE item_status VARCHAR(20);
     DECLARE item_type VARCHAR(20);
     DECLARE existing_claim INT;
+    DECLARE user_role VARCHAR(10);
     
     -- Deklarasi handler untuk menangkap error
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -83,6 +84,12 @@ BEGIN
     END;
 
     START TRANSACTION;  -- Mulai transaction
+
+    -- Cek role user
+    SELECT role INTO user_role FROM users WHERE user_id = p_user_id;
+    IF user_role = 'admin' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Admin tidak dapat mengklaim barang.';
+    END IF;
 
     -- Cek dan lock data barang
     SELECT status, type INTO item_status, item_type
