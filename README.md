@@ -30,7 +30,7 @@ LostFoundIt/
 └── uploads/
     └── items/
 ```
-
+---
 ## 📌 Detail Konsep
 
 ### 🧠 Stored Procedure
@@ -59,7 +59,7 @@ Tugas prosedur:
 
 Penerapan logika bisnis langsung di database menjamin semua aturan tetap berlaku walau aplikasi frontend berubah.
 
-
+---
 ### 🚨 Trigger
 
 Trigger `trg_after_claim` dijalankan secara otomatis **setelah klaim disimpan**. Fungsinya mirip sistem otomatisasi yang menjaga agar status barang selalu sinkron dengan aksi pengguna. trg_after_claim dan akan dijalankan setelah ada INSERT baru pada tabel claims. Fungsinya adalah untuk mengupdate status item menjadi 'claimed' di tabel items ketika ada klaim baru yang dibuat. Trigger ini bekerja secara otomatis setiap kali ada data baru dimasukkan ke tabel claims, sehingga memastikan status item selalu terupdate sesuai dengan adanya klaim baru.
@@ -95,7 +95,7 @@ Peran utama trigger ini:
 
 Dengan trigger ini, sistem menjaga integritas data bahkan jika ada error atau kelalaian di sisi aplikasi.
 
-
+---
 ### 🔄 Transaction
 
 Transaksi digunakan untuk menjamin integritas penuh ketika pengguna melakukan klaim. Proses klaim bukan hanya satu langkah, melainkan gabungan dari berbagai validasi dan penyimpanan data. Jika salah satu tahap gagal, seluruh proses dibatalkan.
@@ -128,7 +128,7 @@ Dengan pendekatan ini:
 * Menghindari data parsial (klaim tercatat tetapi status belum berubah, dll)
 * Konsisten dengan prinsip *atomicity* dalam sistem data terdistribusi
 
-
+---
 ### 📺 Stored Function
 
 Stored function digunakan untuk melakukan *read-only check* terhadap kelayakan klaim suatu barang. Seperti indikator sistem, function ini tidak mengubah data, tapi berperan penting dalam proses validasi.
@@ -165,7 +165,7 @@ Fungsi ini:
 
 Fungsi seperti ini mencerminkan pemisahan logika bisnis yang baik, dan cocok diterapkan pada sistem yang melibatkan banyak titik akses seperti web, mobile, dan API.
 
-
+---
 ### 🔐 Sistem Autentikasi
 
 Autentikasi menjadi pintu utama akses sistem. Sistem menggunakan password hashing dan session handling untuk menjaga keamanan data pengguna.
@@ -192,21 +192,18 @@ Fitur autentikasi:
 * Login aman menggunakan prepared statements
 * Session menyimpan identitas user dan role
 * Akses dibedakan berdasarkan role (`admin`, `user`)
+---
 
-
-### 💾 Backup Otomatis *(opsional)*
+### 💾 Backup Otomatis 
 
 Untuk pengembangan lanjutan, sistem dapat diintegrasikan dengan proses backup otomatis menggunakan `mysqldump`. File backup dapat dijadwalkan dengan task scheduler dan disimpan di direktori `storage/backups`.
 
 ```php
-<?php
-$date = date('Y-m-d_H-i-s');
-$backupFile = __DIR__ . "/storage/backups/backup_$date.sql";
-$command = "mysqldump -u root lostfound_it > $backupFile";
-exec($command);
+header("Content-Type: application/sql");
+header("Content-Disposition: attachment; filename=backup_" . date('Ymd_His') . ".sql");
 ```
 
-
+---
 
 ## 🧩 Relevansi Proyek dengan Pemrosesan Data Terdistribusi
 
