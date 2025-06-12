@@ -2,19 +2,15 @@
 
 Lost&Found IT adalah aplikasi web untuk pelaporan dan klaim barang hilang atau ditemukan di lingkungan IT. Aplikasi ini dirancang untuk memastikan proses pelaporan dan klaim dilakukan secara aman, transparan, dan terkonsolidasi, dengan memanfaatkan stored procedure, trigger, transaction, dan stored function di tingkat database. Sistem ini juga memperhatikan validasi peran dan status barang secara otomatis demi menjaga integritas data.
 
-gambar
+![beranda](uploads/items/beranda.png "Beranda")
 
 ## 📌 Detail Konsep
-
-### ⚠️ Disclaimer
-
-Penerapan **stored procedure**, **trigger**, **transaction**, dan **stored function** dalam proyek ini dirancang sesuai kebutuhan sistem **Lost\&Found IT**. Implementasi pada sistem lain dapat bervariasi tergantung struktur, kebutuhan, dan skenario penggunaannya.
-
 
 ### 🧠 Stored Procedure
 
 Stored procedure digunakan untuk mengelola proses klaim barang secara aman dan terstruktur. Dengan menyimpan prosedur ini di sisi database, sistem menjamin konsistensi eksekusi terlepas dari bagaimana aplikasi frontend atau backend memanggilnya.
 
+![procedure](uploads/items/procedure.png "Procedure")
 
 Prosedur penting:
 
@@ -100,6 +96,8 @@ Dengan pendekatan ini:
 ### 📺 Stored Function
 
 Stored function digunakan untuk melakukan *read-only check* terhadap kelayakan klaim suatu barang. Seperti indikator sistem, function ini tidak mengubah data, tapi berperan penting dalam proses validasi.
+
+![function](uploads/items/function.png "function")
 
 
 #### `fn_isItemClaimable(p_item_id)`
