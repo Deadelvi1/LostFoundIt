@@ -4,6 +4,33 @@ Lost&Found IT adalah aplikasi web untuk pelaporan dan klaim barang hilang atau d
 
 ![beranda](uploads/items/beranda.png "Beranda")
 
+## 📁 Struktur Proyek
+
+```
+LostFoundIt/
+├── database/
+│   └── lostfoundit.sql
+├── includes/
+│   ├── config.php
+│   ├── functions.php
+│   └── header.php
+├── public/
+│   ├── index.php
+│   ├── login.php
+│   ├── register.php
+│   ├── dashboard.php
+│   ├── report_lost.php
+│   ├── report_found.php
+│   ├── claim.php
+│   ├── item_detail.php
+│   ├── laporan.php
+│   ├── get_image.php
+│   ├── backup_db.php
+│   └── logout.php
+└── uploads/
+    └── items/
+```
+
 ## 📌 Detail Konsep
 
 ### 🧠 Stored Procedure
@@ -35,7 +62,8 @@ Penerapan logika bisnis langsung di database menjamin semua aturan tetap berlaku
 
 ### 🚨 Trigger
 
-Trigger `trg_after_claim` dijalankan secara otomatis **setelah klaim disimpan**. Fungsinya mirip sistem otomatisasi yang menjaga agar status barang selalu sinkron dengan aksi pengguna.
+Trigger `trg_after_claim` dijalankan secara otomatis **setelah klaim disimpan**. Fungsinya mirip sistem otomatisasi yang menjaga agar status barang selalu sinkron dengan aksi pengguna. trg_after_claim dan akan dijalankan setelah ada INSERT baru pada tabel claims. Fungsinya adalah untuk mengupdate status item menjadi 'claimed' di tabel items ketika ada klaim baru yang dibuat. Trigger ini bekerja secara otomatis setiap kali ada data baru dimasukkan ke tabel claims, sehingga memastikan status item selalu terupdate sesuai dengan adanya klaim baru.
+
 
 #### `trg_after_claim`
 
@@ -49,6 +77,15 @@ BEGIN
     WHERE item_id = NEW.item_id;
 END
 ```
+Dalam kasus proyek Lost&Found IT, trigger trg_after_claim yang kita buat memang tidak memiliki tabel sendiri, tapi trigger ini terhubung dengan tabel claims dan akan otomatis dijalankan setiap kali ada INSERT baru di tabel tersebut.
+
+Daftar trigger yang ada di database dapat dilihat dengan cara:
+
+```
+SELECT * FROM information_schema.TRIGGERS 
+WHERE TRIGGER_SCHEMA = 'lostfoundit';
+```
+
 
 Peran utama trigger ini:
 
