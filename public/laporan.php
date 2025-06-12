@@ -57,26 +57,27 @@ try {
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($items as $item): ?>
-                                <tr class="hover:bg-gray-50">
+                                <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($item['title']) ?></div>
+                                        <div class="text-sm font-medium text-gray-900">
+                                            <?= htmlspecialchars($item['title']) ?>
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            <?= htmlspecialchars($item['description']) ?>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 py-1 text-xs rounded-full <?= $item['type'] === 'lost' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' ?>">
+                                        <span class="px-2 py-1 text-xs rounded-full font-semibold
+                                            <?= $item['type'] === 'lost' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' ?>">
                                             <?= ucfirst($item['type']) ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 py-1 text-xs rounded-full <?= $item['status'] === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?>">
-                                            <?= ucfirst($item['status']) ?>
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -84,6 +85,12 @@ try {
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <?= date('d F Y', strtotime($item['date_reported'])) ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs rounded-full font-semibold
+                                            <?= $item['status'] === 'claimed' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' ?>">
+                                            <?= ucfirst($item['status']) ?>
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a href="item_detail.php?id=<?= $item['item_id'] ?>" 

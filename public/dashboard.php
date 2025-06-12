@@ -84,16 +84,6 @@ $userName = getCurrentUserName();
                 </div>
             </a>
 
-            <a href="manage_claims.php" class="group bg-white rounded-2xl shadow-lg p-8 flex items-center space-x-6 transform hover:scale-105 transition-all duration-300 hover:shadow-pink-200 animate-fade-in-up delay-400">
-                <div class="bg-pink-50 p-4 rounded-xl group-hover:bg-pink-100 transition-colors duration-300">
-                    <i class="fas fa-tasks text-pink-600 text-3xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold text-pink-700 group-hover:text-pink-800 transition-colors duration-300">Kelola Klaim</h3>
-                    <p class="text-sm text-gray-500 mt-1">Atur status klaim barang yang masuk.</p>
-                </div>
-            </a>
-
             <a href="backup_db.php"
                onclick="return confirm('Yakin ingin mengunduh backup database?')"
                class="group bg-white rounded-2xl shadow-lg p-8 flex items-center space-x-6 transform hover:scale-105 transition-all duration-300 hover:shadow-pink-200 animate-fade-in-up delay-400">
