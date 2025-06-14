@@ -2,10 +2,9 @@
 if (isset($_GET['path'])) {
     $relativePath = $_GET['path'];
 
-    // Sanitize path to prevent directory traversal
     $relativePath = str_replace(['../', './'], '', $relativePath);
 
-    $imagePath = __DIR__ . '/../' . $relativePath; // Path to your uploads directory
+    $imagePath = __DIR__ . '/../' . $relativePath; // Lokasi folder penyimpanan gambar
 
     if (file_exists($imagePath)) {
         $mime = mime_content_type($imagePath);
@@ -13,7 +12,7 @@ if (isset($_GET['path'])) {
         readfile($imagePath);
         exit;
     } else {
-        // Fallback for missing image (optional, you can show a placeholder)
+        // Tampilkan pesan jika gambar tidak ada
         header('HTTP/1.0 404 Not Found');
         echo 'Image not found.';
         exit;

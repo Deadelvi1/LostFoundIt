@@ -13,13 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location = trim($_POST['location'] ?? '');
     $photo = null;
 
-    // Validasi input
+    // Periksa data yang diisi
     if (!$title) {
         $error = "Judul barang wajib diisi.";
     } elseif (!isset($_FILES['photo']) || $_FILES['photo']['error'] === UPLOAD_ERR_NO_FILE) {
         $error = "Foto barang wajib diupload.";
     } else {
-        // Handle file upload
+        // Proses upload foto
         $allowed = ['jpg', 'jpeg', 'png', 'gif'];
         $filename = $_FILES['photo']['name'];
         $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
@@ -27,13 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!in_array($ext, $allowed)) {
             $error = "Format file tidak didukung. Gunakan: " . implode(', ', $allowed);
         } else {
-            // Create uploads directory if it doesn't exist
             $upload_dir = '../uploads/items/';
             if (!file_exists($upload_dir)) {
                 mkdir($upload_dir, 0777, true);
             }
 
-            // Generate unique filename
             $new_filename = uniqid() . '.' . $ext;
             $upload_path = $upload_dir . $new_filename;
 
@@ -49,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            // Insert ke tabel items
+            // Simpan data ke tabel items
             $stmt = $pdo->prepare("
                 INSERT INTO items (
                     user_id, 
@@ -67,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Gagal menyimpan data barang.");
             }
 
-            // Log aktivitas
+            // Catat aktivitas
             $item_id = $pdo->lastInsertId();
             $log_stmt = $pdo->prepare("
                 INSERT INTO activity_logs (

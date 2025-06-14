@@ -141,7 +141,7 @@ try {
 </style>
 
 <script>
-    // Add tooltips for status badges
+    // Tambahkan tooltip untuk badge status
     document.addEventListener('DOMContentLoaded', function() {
         const statusBadges = document.querySelectorAll('.status-badge');
         statusBadges.forEach(badge => {

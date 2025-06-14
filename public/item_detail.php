@@ -10,7 +10,7 @@ $has_claimed = false;
 if (isset($_GET['id'])) {
     $item_id = (int)$_GET['id'];
     
-    // Get item details
+    // ngambi data barang
     $stmt = $pdo->prepare("
         SELECT i.*, u.name as reporter_name 
         FROM items i 
@@ -21,7 +21,7 @@ if (isset($_GET['id'])) {
     $item = $stmt->fetch();
 
     if ($item) {
-        // Check if user has claimed this item
+        // ngecek user udh klaim barang apa belum
         $claim_stmt = $pdo->prepare("
             SELECT * FROM claims 
             WHERE item_id = ? AND claimant_id = ?
@@ -49,7 +49,6 @@ if (isset($_GET['id'])) {
                 <h2 class="text-3xl font-extrabold text-center text-pink-700 mb-10">Detail Barang</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Foto Barang -->
                     <div class="space-y-4">
                         <?php if ($item['photo']): ?>
                             <img src="get_image.php?path=<?= htmlspecialchars($item['photo']) ?>" 
@@ -62,7 +61,6 @@ if (isset($_GET['id'])) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Informasi Barang -->
                     <div class="space-y-4">
                         <div>
                             <h3 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($item['title']) ?></h3>
